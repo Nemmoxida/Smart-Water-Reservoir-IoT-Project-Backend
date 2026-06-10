@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { sensor_data } from 'src/arduino/arduino.entity';
@@ -78,13 +80,43 @@ export class UserService {
   }
 
   async getSensorData(): Promise<SensorData> {
+    const file = await readFile('src/arduino/arduinoSystem.json', 'utf8');
+    const config = JSON.parse(file);
+
     const data: SensorData = {};
 
     // eslint-ignore-next-line
     const rawData = await this.arduinoRepository.query(
       // eslint-ignore-next-line
-      "WITH hitung_all AS (SELECT id,        date,        distance,        CASE             WHEN distance > LAG(distance) OVER (ORDER BY date, id)             THEN distance - LAG(distance) OVER (ORDER BY date, id)            ELSE NULL         END AS delta    FROM sensor_data)SELECT * FROM hitung_allWHERE date >= '2026-03-01 00:00:00' AND date <= '2026-06-06 23:59:59'ORDER BY date",
+      "WITH hitung_all AS (SELECT id,        date,        distance,        CASE             WHEN distance > LAG(distance) OVER (ORDER BY date, id)             THEN distance - LAG(distance) OVER (ORDER BY date, id)            ELSE NULL         END AS delta    FROM sensor_data)SELECT * FROM hitung_allWHERE date >= '2026-03-01 00:00:00' AND date <= NOW() ORDER BY date DESC",
     );
+
+    data.currentCapasity = rawData[0].distance;
+
+    // Daily capacity
+    data.daily.mean =
+      rawData.reduce((accumulator, currentValue) => {
+        return (accumulator += currentValue);
+      }) / rawData.length;
+    data.daily.min = rawData.reduce((prev, current) => {
+      return prev.distance < current.distance
+        ? current.distance
+        : prev.distance;
+    });
+    data.daily.max = rawData.reduce((prev, current) => {
+      return prev.distance > current.distance
+        ? current.distance
+        : prev.distance;
+    });
+    data.daily.historyLiter = rawData;
+
+    data.priceEstimationProgresif = rawData.filter();
+
+    // Not fixed
+    // data.priceEstimation =
+
+    // System Info
+    data.system = config;
 
     return data;
   }
