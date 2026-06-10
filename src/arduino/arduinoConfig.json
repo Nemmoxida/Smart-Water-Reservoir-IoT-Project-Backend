@@ -1,0 +1,11 @@
+{
+  "configVersion": 2,
+  "currenTime": "",
+  "config": {
+    "override": false,
+    "isOn": true,
+    "treshold": 80,
+    "isTimer": false,
+    "timerDelay": ""
+  }
+}
