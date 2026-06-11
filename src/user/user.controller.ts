@@ -18,4 +18,10 @@ export class UserController {
   updateConfig(@Body() config: arduinoConfig) {
     return this.userService.updateConfigData(config);
   }
+
+  @UseGuards(jwtAuthGuard)
+  @Get('/sensorData')
+  SensorData() {
+    return this.userService.getSensorData();
+  }
 }

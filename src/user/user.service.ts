@@ -14,13 +14,13 @@ type History = {
 
 type SensorData = {
   currentCapasity: number;
-  priceEstimation: number;
+  priceEstimation?: number;
   priceEstimationProgresif: number;
   // Past 6 months
-  monthly: {
+  monthly?: {
     mean: number;
-    min: number;
-    max: number;
+    min?: number;
+    max?: number;
     historyPrice: Array<History>;
     historyLiter: Array<History>;
   };
@@ -28,8 +28,8 @@ type SensorData = {
   // Past 7 days or a week
   daily: {
     mean: number;
-    min: number;
-    max: number;
+    min?: number;
+    max?: number;
     historyPrice: Array<History>;
     historyLiter: Array<History>;
   };
@@ -83,41 +83,122 @@ export class UserService {
     const file = await readFile('src/arduino/arduinoSystem.json', 'utf8');
     const config = JSON.parse(file);
 
-    const data: SensorData = {};
+    const data: any = {};
 
-    // eslint-ignore-next-line
+    // getting data from DB
     const rawData = await this.arduinoRepository.query(
-      // eslint-ignore-next-line
-      "WITH hitung_all AS (SELECT id,        date,        distance,        CASE             WHEN distance > LAG(distance) OVER (ORDER BY date, id)             THEN distance - LAG(distance) OVER (ORDER BY date, id)            ELSE NULL         END AS delta    FROM sensor_data)SELECT * FROM hitung_allWHERE date >= '2026-03-01 00:00:00' AND date <= NOW() ORDER BY date DESC",
+      "WITH hitung_all AS (SELECT id, date, distance, CASE WHEN distance > LAG(distance) OVER (ORDER BY date, id) THEN distance - LAG(distance) OVER (ORDER BY date, id) ELSE NULL END AS delta FROM sensor_data) SELECT * FROM hitung_all WHERE date >= '2026-01-01 00:00:00' AND date <= NOW() ORDER BY date DESC",
     );
 
     data.currentCapasity = rawData[0].distance;
+    data.daily = await this.userDaily(rawData);
+    // data.monthly = await this.userMonthly(rawData);
 
-    // Daily capacity
-    data.daily.mean =
-      rawData.reduce((accumulator, currentValue) => {
-        return (accumulator += currentValue);
-      }) / rawData.length;
-    data.daily.min = rawData.reduce((prev, current) => {
-      return prev.distance < current.distance
-        ? current.distance
-        : prev.distance;
-    });
-    data.daily.max = rawData.reduce((prev, current) => {
-      return prev.distance > current.distance
-        ? current.distance
-        : prev.distance;
-    });
-    data.daily.historyLiter = rawData;
-
-    data.priceEstimationProgresif = rawData.filter();
-
-    // Not fixed
-    // data.priceEstimation =
+    data.priceEstimationProgresif = await this.priceEstimation(rawData);
 
     // System Info
     data.system = config;
 
     return data;
+  }
+
+  private async userDaily(rawData) {
+    const dailyData: any = {
+      daily: {},
+    };
+
+    const filteredDataDaily = rawData.filter((data) => {
+      return new Date(data.date).getDay() + 1 == new Date().getDay() + 1;
+    });
+
+    // console.log(filteredDataDaily);
+
+    // Daily capacity
+    dailyData.daily.mean =
+      filteredDataDaily.reduce((accumulator, currentValue) => {
+        // console.log(accumulator);
+        // console.log(currentValue.delta);
+        return (accumulator += currentValue.delta / 10);
+      }, 0) / filteredDataDaily.length;
+
+    // console.log(
+    //   filteredDataDaily.reduce((accumulator, currentValue) => {
+    //     return (accumulator += currentValue.delta / 10);
+    //   }),
+    // );
+
+    // dailyData.daily.min = filteredDataDaily.reduce((prev, current) => {
+    //   // console.log('current: ' + current);
+    //   // console.log(prev > current.distance);
+    //   return prev > current.distance ? (prev = current.distance) : prev;
+    // }, 100);
+    // dailyData.daily.max = filteredDataDaily.reduce((prev, current) => {
+    //   return prev > current.distance ? current.distance : prev;
+    // });
+    dailyData.daily.historyLiter = filteredDataDaily.map((item) => {
+      // console.log(filteredDataDaily.date);
+      // console.log((Math.PI * 96 * filteredDataDaily.distance) / 10)
+      return {
+        date: item.date,
+        liter: (Math.PI * Math.pow(48, 2) * item.distance) / 10,
+      };
+    });
+    dailyData.daily.historyPrice = filteredDataDaily.map(() => {
+      return {
+        date: filteredDataDaily.date,
+        price: ((Math.PI * 96 * filteredDataDaily.distance) / 10) * 0.1,
+      };
+    });
+
+    return dailyData;
+  }
+
+  private async userMonthly(rawData) {
+    const monthlyData: any = {
+      monthly: {},
+    };
+
+    const filteredDataMonthly = rawData.filter((data) => {
+      return new Date(data.date).getMonth() + 1 == new Date().getMonth() + 1;
+    });
+
+    // monthly capacity
+    monthlyData.monthly.mean =
+      filteredDataMonthly.reduce((accumulator, currentValue) => {
+        return (accumulator += currentValue);
+      }) / filteredDataMonthly.length;
+    // monthlyData.monthly.min = filteredDataMonthly.reduce((prev, current) => {
+    //   return prev < current.distance ? current.distance : prev;
+    // });
+    // monthlyData.monthly.max = filteredDataMonthly.reduce((prev, current) => {
+    //   return prev > current.distance ? current.distance : prev;
+    // });
+    monthlyData.monthly.historyLiter = filteredDataMonthly.map(() => {
+      return {
+        date: filteredDataMonthly.date,
+        liter: (Math.PI * 96 * filteredDataMonthly.distance) / 10,
+      };
+    });
+    monthlyData.monthly.historyPrice = filteredDataMonthly.map(() => {
+      return {
+        date: filteredDataMonthly.date,
+        liter: ((Math.PI * 96 * filteredDataMonthly.distance) / 10) * 0.1,
+      };
+    });
+
+    return monthlyData;
+  }
+
+  private async priceEstimation(rawData) {
+    const priceData: any = {};
+    const filteredData = rawData.filter((data) => {
+      return new Date(data.date).getMonth() + 1 == new Date().getMonth() + 1;
+    });
+
+    priceData.progressif = filteredData.reduce((total, delta) => {
+      return (total += delta);
+    });
+
+    return priceData.progressif;
   }
 }
