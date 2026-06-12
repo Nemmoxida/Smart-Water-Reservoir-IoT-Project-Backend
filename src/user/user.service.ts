@@ -138,10 +138,33 @@ export class UserService {
     dailyData.daily.historyLiter = filteredDataDaily.map((item) => {
       // console.log(filteredDataDaily.date);
       // console.log((Math.PI * 96 * filteredDataDaily.distance) / 10)
-      return {
-        date: item.date,
-        liter: (Math.PI * Math.pow(48, 2) * item.distance) / 10,
-      };
+      const history: any = [
+        {
+          date: new Date(new Date().setHours(0, 0, 0, 0)),
+          liter: 0,
+        },
+      ];
+      let firstHour = 0;
+      const hourData = new Date(item.date).getHours();
+      if (hourData != firstHour) {
+        firstHour = hourData;
+      }
+
+      history.some((item) => item.date.getHours() == hourData);
+
+      if (!history) {
+        const object = {
+          date: new Date(new Date().setHours(firstHour, 0, 0, 0)),
+          liter: 0,
+        };
+
+        history.push(object);
+      }
+
+      history[firstHour].liter +=
+        (Math.PI * Math.pow(48, 2) * item.distance) / 10;
+
+      if (hourData) return history;
     });
     dailyData.daily.historyPrice = filteredDataDaily.map(() => {
       return {
