@@ -1,11 +1,9 @@
 {
-  "configVersion": 2,
-  "currenTime": "",
+  "configVersion": 16,
+  "currenTime": "2026-06-14T07:26:31.088Z",
   "config": {
-    "override": false,
     "isOn": true,
-    "treshold": 80,
-    "isTimer": false,
-    "timerDelay": ""
+    "threshold": 10,
+    "timerDelay": 10000
   }
 }

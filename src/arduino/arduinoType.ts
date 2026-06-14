@@ -15,4 +15,11 @@ export type arduinoData = {
   data: {
     distance: number;
   };
+  system: {
+    totalUpTime: number;
+    internalTime: number;
+    chipTemp: number;
+    availableMem: number;
+    wifiSignal: number;
+  };
 };

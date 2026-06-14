@@ -1,9 +1,1 @@
-{
-  "system": {
-    "totalUpTime": 0,
-    "internalTime": 0,
-    "chipTemp": 0,
-    "availableMem": 0,
-    "wifiSignal": 0
-  }
-}
+{"system":{"totalUpTime":62,"internalTime":1781425353,"chipTemp":53,"availableMem":244772,"wifiSignal":-32}}
