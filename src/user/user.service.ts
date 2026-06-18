@@ -22,7 +22,6 @@ type SensorData = {
     totalLiterUsed: number;
     min?: number;
     max?: number;
-    historyPrice: Array<History>;
     historyLiter: Array<History>;
   };
 
@@ -32,7 +31,6 @@ type SensorData = {
     totalLiterUsed: number;
     min?: number;
     max?: number;
-    historyPrice: Array<History>;
     historyLiter: Array<History>;
   };
 
@@ -96,7 +94,7 @@ export class UserService {
 
     // getting data from DB
     const rawData = await this.arduinoRepository.query(
-      "WITH hitung_all AS (SELECT id, date, distance, CASE WHEN distance > LAG(distance) OVER (ORDER BY date, id) THEN distance - LAG(distance) OVER (ORDER BY date, id) ELSE NULL END AS delta FROM sensor_data) SELECT * FROM hitung_all WHERE date >= '2026-05-01 00:00:00' AND date <= '2026-06-25 00:00:00' ORDER BY date DESC",
+      "WITH hitung_all AS (SELECT id, date, distance, CASE WHEN distance > LAG(distance) OVER (ORDER BY date, id) THEN distance - LAG(distance) OVER (ORDER BY date, id) ELSE NULL END AS delta FROM sensor_data) SELECT * FROM hitung_all WHERE date >= '2026-05-01 00:00:00' AND date <= NOW() ORDER BY date DESC",
     );
 
     data.currentCapasity = rawData[0].distance;
@@ -123,8 +121,6 @@ export class UserService {
 
       return d.getMonth() == t.getMonth() && d.getDate() == t.getDate();
     });
-
-    let notNull = 0;
 
     // // Daily capacity? currently counting average PER MINUTES
     // const sumLiters = filteredDataDaily.reduce((acc, currentValue) => {
@@ -185,37 +181,37 @@ export class UserService {
     dailyData.daily.mean = sumLiters / 24;
     dailyData.daily.totalLiterUsed = sumLiters;
 
-    const historyPrice: any = [
-      {
-        date: new Date(new Date().setHours(0, 0, 0, 0)),
-        price: 0,
-      },
-    ];
+    // const historyPrice: any = [
+    //   {
+    //     date: new Date(new Date().setHours(0, 0, 0, 0)),
+    //     price: 0,
+    //   },
+    // ];
 
-    const historyPriceFunc = filteredDataDaily.toReversed().map((item) => {
-      let firstHour = 0;
-      const hourData = new Date(item.date).getHours();
-      if (hourData != firstHour) {
-        firstHour = hourData;
-      }
+    // const historyPriceFunc = filteredDataDaily.toReversed().map((item) => {
+    //   let firstHour = 0;
+    //   const hourData = new Date(item.date).getHours();
+    //   if (hourData != firstHour) {
+    //     firstHour = hourData;
+    //   }
 
-      if (
-        historyPrice.some((item) => item.date.getHours() == hourData) == false
-      ) {
-        const object = {
-          date: new Date(new Date().setHours(firstHour, 0, 0, 0)),
-          price: 0,
-        };
+    //   if (
+    //     historyPrice.some((item) => item.date.getHours() == hourData) == false
+    //   ) {
+    //     const object = {
+    //       date: new Date(new Date().setHours(firstHour, 0, 0, 0)),
+    //       price: 0,
+    //     };
 
-        historyPrice.push(object);
-      }
+    //     historyPrice.push(object);
+    //   }
 
-      historyPrice[firstHour].price +=
-        ((Math.PI * Math.pow(48, 2) * item.distance) / 10) * 0.1;
-    });
+    //   historyPrice[firstHour].price +=
+    //     ((Math.PI * Math.pow(48, 2) * item.distance) / 10) * 0.14;
+    // });
 
     dailyData.daily.historyLiter = historyLiter;
-    dailyData.daily.historyPrice = historyPrice;
+    // dailyData.daily.historyPrice = historyPrice;
 
     return dailyData;
   }
@@ -293,37 +289,37 @@ export class UserService {
     monthlyData.monthly.mean = sumLiters / 24;
     monthlyData.monthly.totalLiterUsed = sumLiters;
 
-    const historyPrice: any = [
-      {
-        date: new Date(new Date().setHours(0, 0, 0, 0)),
-        price: 0,
-      },
-    ];
+    // const historyPrice: any = [
+    //   {
+    //     date: new Date(new Date().setHours(0, 0, 0, 0)),
+    //     price: 0,
+    //   },
+    // ];
 
-    const historyPriceFunc = filteredDataMonthly.toReversed().map((item) => {
-      let firstHour = 0;
-      const hourData = new Date(item.date).getHours();
-      if (hourData != firstHour) {
-        firstHour = hourData;
-      }
+    // const historyPriceFunc = filteredDataMonthly.toReversed().map((item) => {
+    //   let firstHour = 0;
+    //   const hourData = new Date(item.date).getHours();
+    //   if (hourData != firstHour) {
+    //     firstHour = hourData;
+    //   }
 
-      if (
-        historyPrice.some((item) => item.date.getHours() == hourData) == false
-      ) {
-        const object = {
-          date: new Date(new Date().setHours(firstHour, 0, 0, 0)),
-          price: 0,
-        };
+    //   if (
+    //     historyPrice.some((item) => item.date.getHours() == hourData) == false
+    //   ) {
+    //     const object = {
+    //       date: new Date(new Date().setHours(firstHour, 0, 0, 0)),
+    //       price: 0,
+    //     };
 
-        historyPrice.push(object);
-      }
+    //     historyPrice.push(object);
+    //   }
 
-      historyPrice[firstHour].price +=
-        ((Math.PI * Math.pow(48, 2) * item.distance) / 10) * 0.1;
-    });
+    //   historyPrice[firstHour].price +=
+    //     ((Math.PI * Math.pow(48, 2) * item.distance) / 10) * 0.14;
+    // });
 
     monthlyData.monthly.historyLiter = historyLiter;
-    monthlyData.monthly.historyPrice = historyPrice;
+    // monthlyData.monthly.historyPrice = historyPrice;
 
     return monthlyData;
   }

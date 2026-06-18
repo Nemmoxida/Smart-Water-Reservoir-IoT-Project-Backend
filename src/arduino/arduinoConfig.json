@@ -1,9 +1,9 @@
 {
-  "configVersion": 16,
-  "currenTime": "2026-06-14T07:26:31.088Z",
+  "configVersion": 145,
+  "currenTime": "2026-06-17T16:29:04.434Z",
   "config": {
-    "isOn": true,
+    "isOn": false,
     "threshold": 10,
-    "timerDelay": 10000
+    "timerDelay": 1000
   }
 }

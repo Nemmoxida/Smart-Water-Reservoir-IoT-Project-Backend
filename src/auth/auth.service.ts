@@ -9,7 +9,7 @@ export class AuthService {
     const payload = { username: username };
 
     return {
-      refresh_token: await this.jwt.signAsync(payload),
+      token: await this.jwt.signAsync(payload),
     };
   }
 }
