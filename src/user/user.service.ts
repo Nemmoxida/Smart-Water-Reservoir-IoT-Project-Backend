@@ -51,7 +51,7 @@ export class UserService {
   ) {}
 
   async getConfigData(): Promise<arduinoConfig> {
-    const file = await readFile('src/arduino/arduinoConfig.json', 'utf8');
+    const file = await readFile(process.env.ARDUINO_CONFIG || '', 'utf8');
     const config = JSON.parse(file) as arduinoConfig;
 
     return config;
@@ -60,7 +60,7 @@ export class UserService {
   async updateConfigData(
     config: Partial<arduinoConfig['config']> | any,
   ): Promise<any> {
-    const path = 'src/arduino/arduinoConfig.json';
+    const path = process.env.ARDUINO_CONFIG || '';
 
     try {
       const file = await readFile(path, 'utf8');
@@ -87,7 +87,7 @@ export class UserService {
   }
 
   async getSensorData(): Promise<SensorData> {
-    const file = await readFile('src/arduino/arduinoSystem.json', 'utf8');
+    const file = await readFile(process.env.ARDUINO_SYSTEM || '', 'utf8');
     const config = JSON.parse(file);
 
     const data: any = {};

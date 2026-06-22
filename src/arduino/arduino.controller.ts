@@ -18,21 +18,20 @@ export class ArduinoController {
   // route for arduino to send data
   @Post('data')
   async postData(@Body() data: arduinoData): Promise<any> {
-    console.log('trigger');
     let lastDistance: null | number = null;
     let delta: number = 0; // difference between previous and current disatance
-    const filePath = './src/arduino/arduinoConfig.json';
+    const filePath: string = process.env.ARDUINO_CONFIG || '';
     const fileContent = await readFile(filePath, 'utf-8');
 
     const jsonObject = JSON.parse(fileContent) as arduinoConfig;
 
-    const configPath = './src/arduino/arduinoSystem.json';
+    const systemFile: string = process.env.ARDUINO_SYSTEM || '';
     // eslint-disable-next-line
     const systemData = {
       system: data.system,
     };
 
-    await writeFile(configPath, JSON.stringify(systemData));
+    await writeFile(systemFile, JSON.stringify(systemData));
 
     // for if the server started the variable will be null
     if (lastDistance == null) {
@@ -47,8 +46,6 @@ export class ArduinoController {
       distance: data.data.distance,
       delta: delta,
     });
-
-    console.log('finish');
 
     // check if config from esp is outdated
     if (jsonObject.configVersion > data.configVersion) {

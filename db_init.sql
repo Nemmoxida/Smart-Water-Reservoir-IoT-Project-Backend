@@ -1,0 +1,7 @@
+CREATE Table sensor_data(
+    id int NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    delta int,
+    distance DOUBLE PRECISION
+)
+
